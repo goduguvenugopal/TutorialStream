@@ -1,0 +1,11 @@
+{
+  "name": "tutorial-streamer-root",
+  "version": "1.0.0",
+  "description": "Stream local tutorial videos to mobile devices",
+  "scripts": {
+    "start": "node backend/server.js",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev -- --host",
+    "build": "npm --prefix frontend run build"
+  }
+}
