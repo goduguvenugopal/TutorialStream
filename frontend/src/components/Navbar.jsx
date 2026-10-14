@@ -1,7 +1,46 @@
-import React from 'react';
-import { Play, Wifi, WifiOff, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, Wifi, WifiOff, Settings, Download } from 'lucide-react';
 
 export default function Navbar({ isConnected, serverUrl, latency, onOpenSettings }) {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Listen for PWA install prompt event
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Check if already in standalone display mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+    }
+  };
+
   // Format host for display (e.g., 192.168.1.15)
   const displayHost = serverUrl ? serverUrl.replace(/^https?:\/\//, '') : 'Set Server';
 
@@ -18,6 +57,18 @@ export default function Navbar({ isConnected, serverUrl, latency, onOpenSettings
       </div>
 
       <div className="nav-actions">
+        {/* PWA Install Button when available */}
+        {installPrompt && !isInstalled && (
+          <button
+            className="btn-install-pwa"
+            onClick={handleInstallClick}
+            title="Install TutorialStream on your device as an App"
+          >
+            <Download size={13} />
+            <span>Install</span>
+          </button>
+        )}
+
         <button
           className={`server-pill ${isConnected ? 'pill-connected' : 'pill-disconnected'}`}
           onClick={onOpenSettings}
