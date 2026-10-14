@@ -1,0 +1,31 @@
+{
+  "name": "TutorialStream • Local Video Hub",
+  "short_name": "TutorialStream",
+  "description": "Stream local tutorial videos from your laptop over Wi-Fi or Mobile Hotspot offline without internet.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#0a0e1a",
+  "orientation": "any",
+  "categories": ["education", "entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

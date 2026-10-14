@@ -36,9 +36,7 @@
       "shortcutName": "TutorialStream"
     },
     "files": [
-      "**/*",
-      "../backend/**/*",
-      "../frontend/dist/**/*"
+      "**/*"
     ]
   }
 }

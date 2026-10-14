@@ -4,8 +4,8 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { scanTutorials } from '../backend/scanner.js';
-import { getLocalIpAddresses } from '../backend/getLocalIp.js';
+import { scanTutorials } from './scanner.js';
+import { getLocalIpAddresses } from './getLocalIp.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -136,7 +136,7 @@ function startServer() {
   });
 
   // Serve static frontend build
-  const frontendDistPath = path.join(__dirname, '../frontend/dist');
+  const frontendDistPath = path.join(__dirname, 'dist-client');
   if (fs.existsSync(frontendDistPath)) {
     serverApp.use(express.static(frontendDistPath));
     serverApp.get('*', (req, res) => {
