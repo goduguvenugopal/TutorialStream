@@ -6,6 +6,9 @@
     "start": "node backend/server.js",
     "backend": "npm --prefix backend run dev",
     "frontend": "npm --prefix frontend run dev -- --host",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "desktop": "npm --prefix desktop start",
+    "build:exe": "npm --prefix desktop run build:portable",
+    "build:installer": "npm --prefix desktop run build:installer"
   }
 }

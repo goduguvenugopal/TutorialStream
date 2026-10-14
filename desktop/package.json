@@ -1,0 +1,44 @@
+{
+  "name": "tutorial-streamer-desktop",
+  "version": "1.0.0",
+  "description": "Background System Tray server for TutorialStream",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "build:portable": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.tutorialstream.app",
+    "productName": "TutorialStream",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": ["portable", "nsis"],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TutorialStream"
+    },
+    "files": [
+      "**/*",
+      "../backend/**/*",
+      "../frontend/dist/**/*"
+    ]
+  }
+}
