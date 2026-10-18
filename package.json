@@ -9,6 +9,8 @@
     "frontend": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
     "desktop": "npm --prefix desktop start",
+    "tunnel": "npx cloudflared tunnel --url http://localhost:5000",
+    "tunnel:lt": "npx localtunnel --port 5000",
     "build:exe": "npm --prefix desktop run build:portable",
     "build:installer": "npm --prefix desktop run build:installer"
   },

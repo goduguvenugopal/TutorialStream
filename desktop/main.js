@@ -7,17 +7,64 @@ import { fileURLToPath } from 'url';
 import { scanTutorials } from './scanner.js';
 import { getLocalIpAddresses } from './getLocalIp.js';
 import { ensureFirewallRule } from './firewall.js';
+import localtunnel from 'localtunnel';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Port and tutorials path
 const PORT = process.env.PORT || 5000;
-const TUTORIALS_PATH = process.env.TUTORIALS_PATH || 'E:\\Tutorials';
+const TUTORIALS_PATH = process.env.TUTORIALS_PATH || 'E:\\';
 
 let tray = null;
 let serverInstance = null;
 let cachedLibrary = null;
+
+// Remote HTTPS Tunnel for Vercel / Remote access
+let tunnelInstance = null;
+let tunnelUrl = null;
+let isTunnelStarting = false;
+
+async function startTunnel(onUpdate) {
+  if (tunnelInstance) return tunnelUrl;
+  try {
+    isTunnelStarting = true;
+    if (onUpdate) onUpdate();
+    tunnelInstance = await localtunnel({ port: PORT });
+    tunnelUrl = tunnelInstance.url;
+    tunnelInstance.on('close', () => {
+      tunnelInstance = null;
+      tunnelUrl = null;
+      if (onUpdate) onUpdate();
+    });
+    tunnelInstance.on('error', (err) => {
+      console.error('Tunnel error:', err);
+      tunnelInstance = null;
+      tunnelUrl = null;
+      if (onUpdate) onUpdate();
+    });
+    return tunnelUrl;
+  } catch (err) {
+    console.error('Failed to create tunnel:', err);
+    tunnelInstance = null;
+    tunnelUrl = null;
+    throw err;
+  } finally {
+    isTunnelStarting = false;
+    if (onUpdate) onUpdate();
+  }
+}
+
+async function stopTunnel(onUpdate) {
+  if (tunnelInstance) {
+    try {
+      tunnelInstance.close();
+    } catch (e) {}
+    tunnelInstance = null;
+    tunnelUrl = null;
+    if (onUpdate) onUpdate();
+  }
+}
 
 // MIME types lookup
 const MIME_TYPES = {
@@ -37,7 +84,7 @@ function startServer() {
     cors({
       origin: '*',
       methods: ['GET', 'HEAD', 'OPTIONS'],
-      allowedHeaders: ['Range', 'Content-Type', 'Authorization', 'Origin', 'Accept'],
+      allowedHeaders: ['Range', 'Content-Type', 'Authorization', 'Origin', 'Accept', 'Bypass-Tunnel-Reminder'],
       exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Type'],
     })
   );
@@ -52,6 +99,7 @@ function startServer() {
       serverTime: new Date().toISOString(),
       tutorialsPath: TUTORIALS_PATH,
       localIps,
+      tunnelUrl,
     });
   });
 
@@ -226,6 +274,63 @@ if (!gotTheLock) {
         },
         { type: 'separator' },
         {
+          label: tunnelUrl ? '🌐 Remote HTTPS (Vercel): Active' : '🌐 Remote HTTPS (Vercel): Offline',
+          enabled: false,
+        },
+        ...(tunnelUrl
+          ? [
+              {
+                label: `📋 Copy HTTPS URL (${tunnelUrl})`,
+                click: () => {
+                  clipboard.writeText(tunnelUrl);
+                  if (Notification.isSupported()) {
+                    new Notification({
+                      title: 'HTTPS URL Copied!',
+                      body: `Paste into your Vercel site on phone:\n${tunnelUrl}`,
+                    }).show();
+                  }
+                },
+              },
+              {
+                label: '⏹️ Stop Remote Tunnel',
+                click: async () => {
+                  await stopTunnel(updateContextMenu);
+                  if (Notification.isSupported()) {
+                    new Notification({
+                      title: 'Tunnel Stopped',
+                      body: 'Remote HTTPS tunnel has been closed.',
+                    }).show();
+                  }
+                },
+              },
+            ]
+          : [
+              {
+                label: isTunnelStarting ? '⏳ Starting HTTPS Tunnel...' : '🚀 Start Remote HTTPS Tunnel (for Vercel)',
+                enabled: !isTunnelStarting,
+                click: async () => {
+                  try {
+                    const url = await startTunnel(updateContextMenu);
+                    clipboard.writeText(url);
+                    if (Notification.isSupported()) {
+                      new Notification({
+                        title: 'Remote HTTPS Ready!',
+                        body: `URL copied to clipboard! Paste into Vercel:\n${url}`,
+                      }).show();
+                    }
+                  } catch (err) {
+                    if (Notification.isSupported()) {
+                      new Notification({
+                        title: 'Tunnel Error',
+                        body: `Failed to start tunnel: ${err.message}`,
+                      }).show();
+                    }
+                  }
+                },
+              },
+            ]),
+        { type: 'separator' },
+        {
           label: '🚀 Start with Windows (Auto-Boot)',
           type: 'checkbox',
           checked: isStartOnBoot,
@@ -244,7 +349,7 @@ if (!gotTheLock) {
             if (Notification.isSupported()) {
               new Notification({
                 title: 'Library Updated',
-                body: `Found ${cachedLibrary.totalCount} videos (${cachedLibrary.totalSize}) in E:\\Tutorials`,
+                body: `Found ${cachedLibrary.totalCount} videos (${cachedLibrary.totalSize}) in ${TUTORIALS_PATH}`,
               }).show();
             }
           },
@@ -253,6 +358,7 @@ if (!gotTheLock) {
         {
           label: '❌ Exit TutorialStream',
           click: () => {
+            stopTunnel();
             if (serverInstance) {
               serverInstance.close();
             }

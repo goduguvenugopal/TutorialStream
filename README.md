@@ -40,15 +40,14 @@ If you want the web app hosted on Vercel:
 3. Framework Preset: **Vite**.
 4. Click **Deploy**.
 
-### 💡 Connecting Vercel (HTTPS) to your Laptop:
-Because Vercel runs on `https://`, modern mobile browsers restrict fetching insecure `http://` local IP addresses (Mixed Content). You have two super easy options:
+### 💡 Connecting Vercel (HTTPS) to your Laptop (Remote Access):
+Because Vercel runs on `https://`, modern mobile browsers restrict fetching insecure `http://` local IP addresses (Mixed Content), and local IPs cannot be reached over cellular data (4G/5G).
 
-- **Option A (Direct - Recommended & Free)**: You don't even need Vercel! The Express backend already serves the built React web app directly. Just open `http://<laptop-ip>:5000` on your phone browser.
-- **Option B (Tunnel for Vercel)**: Run a free HTTPS tunnel on your laptop:
-  ```bash
-  npx localtunnel --port 5000
-  ```
-  Copy the `https://...localtunnel.me` address and paste it into the Server IP modal in your Vercel website!
+To stream remotely or over Vercel, use our built-in HTTPS tunnel:
+- **Option A (Desktop Tray)**: In the desktop app tray, click **"🚀 Start Remote HTTPS Tunnel (for Vercel)"** and paste the copied URL into Vercel on your phone.
+- **Option B (1-Click Batch)**: Double-click `start-remote-tunnel.bat` or run `npm run tunnel` to launch a Cloudflare HTTPS tunnel.
+
+👉 **For complete details and architecture, see [REMOTE_STREAMING_GUIDE.md](file:///e:/tutorial-streamer/REMOTE_STREAMING_GUIDE.md).**
 
 ---
 

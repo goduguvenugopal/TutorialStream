@@ -8,7 +8,13 @@ export function normalizeServerUrl(inputUrl) {
   if (!inputUrl) return '';
   let url = inputUrl.trim();
   if (!/^https?:\/\//i.test(url)) {
-    url = `http://${url}`;
+    // If domain looks like a tunnel (trycloudflare, loca.lt, ngrok, etc.) or page is HTTPS and not an IP
+    const isRawIp = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/.test(url) || /^localhost(:\d+)?$/i.test(url);
+    if (!isRawIp || (typeof window !== 'undefined' && window.location.protocol === 'https:')) {
+      url = `https://${url}`;
+    } else {
+      url = `http://${url}`;
+    }
   }
   return url.replace(/\/+$/, '');
 }
@@ -18,11 +24,11 @@ export function normalizeServerUrl(inputUrl) {
  */
 export function getDefaultServerUrl() {
   if (typeof window !== 'undefined') {
-    // 1. Check URL query param (e.g. ?ip=10.233.196.66 or ?server=http://...)
+    // 1. Check URL query param (e.g. ?ip=10.233.196.66 or ?server=https://...)
     const searchParams = new URLSearchParams(window.location.search);
     const queryIp = searchParams.get('ip') || searchParams.get('server');
     if (queryIp) {
-      const fullUrl = queryIp.includes(':') ? queryIp : `${queryIp}:5000`;
+      const fullUrl = queryIp.includes(':') || queryIp.includes('.') ? queryIp : `${queryIp}:5000`;
       const normalized = normalizeServerUrl(fullUrl);
       saveServerUrl(normalized);
       return normalized;
@@ -40,7 +46,7 @@ export function getDefaultServerUrl() {
     }
 
     // 4. If accessed via phone on mobile hotspot / Wi-Fi (e.g. http://10.233.196.66:5173)
-    // The hostname IS the laptop's IP address! Auto-route backend to port 5000
+    // The hostname IS the laptop's IP address! Auto-route backend to port 5000 (HTTP only if not Vercel)
     if (hostname && !hostname.includes('vercel.app')) {
       return `http://${hostname}:5000`;
     }
@@ -69,11 +75,14 @@ export async function testConnection(serverUrl) {
 
   const startTime = performance.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(`${normalized}/api/health`, {
       method: 'GET',
+      headers: {
+        'Bypass-Tunnel-Reminder': 'true',
+      },
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
@@ -95,9 +104,14 @@ export async function testConnection(serverUrl) {
     clearTimeout(timeoutId);
     let msg = err.message;
     if (err.name === 'AbortError') {
-      msg = 'Connection timed out (no response within 6s). Check your Wi-Fi or firewall.';
+      msg = 'Connection timed out (no response within 8s). Check that the server or tunnel is running.';
     } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-      msg = 'Failed to reach server. Make sure phone and laptop are on the same Wi-Fi/Hotspot and the backend is running.';
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      if (isHttps && normalized.startsWith('http://')) {
+        msg = 'Mixed Content Error: Vercel is HTTPS and cannot connect to http://. Please use an HTTPS tunnel URL (e.g. Cloudflare Tunnel or LocalTunnel).';
+      } else {
+        msg = 'Failed to reach server. Make sure the server or HTTPS tunnel is running on your laptop.';
+      }
     }
     throw new Error(msg);
   }
@@ -109,7 +123,11 @@ export async function testConnection(serverUrl) {
 export async function fetchLibrary(serverUrl, refresh = false) {
   const normalized = normalizeServerUrl(serverUrl);
   const url = `${normalized}/api/videos${refresh ? '?refresh=true' : ''}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: {
+      'Bypass-Tunnel-Reminder': 'true',
+    },
+  });
   if (!res.ok) {
     throw new Error(`Failed to load videos (HTTP ${res.status})`);
   }

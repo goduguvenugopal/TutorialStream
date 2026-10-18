@@ -26,7 +26,7 @@ app.use(
   cors({
     origin: '*',
     methods: ['GET', 'HEAD', 'OPTIONS'],
-    allowedHeaders: ['Range', 'Content-Type', 'Authorization', 'Origin', 'Accept'],
+    allowedHeaders: ['Range', 'Content-Type', 'Authorization', 'Origin', 'Accept', 'Bypass-Tunnel-Reminder'],
     exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Type'],
   })
 );
