@@ -1,6 +1,6 @@
 {
   "name": "tutorial-streamer-root",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Stream local tutorial videos to mobile devices",
   "scripts": {
     "start": "node backend/server.js",
