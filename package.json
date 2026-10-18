@@ -4,11 +4,15 @@
   "description": "Stream local tutorial videos to mobile devices",
   "scripts": {
     "start": "node backend/server.js",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "npm --prefix backend run dev",
-    "frontend": "npm --prefix frontend run dev -- --host",
+    "frontend": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
     "desktop": "npm --prefix desktop start",
     "build:exe": "npm --prefix desktop run build:portable",
     "build:installer": "npm --prefix desktop run build:installer"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }

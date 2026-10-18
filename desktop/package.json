@@ -33,7 +33,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "TutorialStream"
+      "shortcutName": "TutorialStream",
+      "include": "build/installer.nsh",
+      "runAfterFinish": true
     },
     "files": [
       "**/*"

@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { scanTutorials } from './scanner.js';
 import { getLocalIpAddresses } from './getLocalIp.js';
+import { ensureFirewallRule } from './firewall.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,7 +157,10 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
+    // Ensure Windows firewall allows port 5000 for mobile access
+    await ensureFirewallRule(PORT);
+
     // Start local Express server
     startServer();
 
